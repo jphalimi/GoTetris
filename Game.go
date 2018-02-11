@@ -10,7 +10,9 @@ const (
    GRID_X = 20
    GRID_Y = 10
    GAME_INITIAL_SPEED = 5e8
-   SPEED_STEP = 5e7
+   MOVE_STEP = 8e7
+   LEVEL_STEP = 5e7
+   ROTATION_STEP = 1e8
    INPUT_SPEED = 0
 )
 
@@ -22,7 +24,7 @@ type Game struct {
    speed int64
    level int
    last_tick int64
-   last_input_tick int64
+   last_move_tick, last_rotation_tick int64
    picked_new_piece bool
    game_over bool
 }
@@ -37,7 +39,8 @@ func (g *Game) init() {
    g.level = 1
    g.speed = GAME_INITIAL_SPEED // In Nano-seconds.
    g.last_tick = time.Now().UnixNano()
-   g.last_input_tick = 0
+   g.last_move_tick = 0
+   g.last_rotation_tick = 0
    g.cur_piece = g.pick_piece()
    g.next_piece = g.pick_piece()
    g.game_over = false
@@ -65,12 +68,15 @@ func (g *Game) grid_set(i, j int) bool {
 func (g *Game) addScore(load int) {
    g.score += load
    scores_to_level := map[int]int {
-      100: 2,
-      300: 3,
-      500: 4,
-      8000: 5,
-      15000: 6,
-      25000: 7}
+      300: 2,
+      800: 3,
+      1300: 4,
+      2000: 5,
+      4000: 6,
+      6000: 7,
+      8000: 8,
+      10000: 9,
+      15000: 10}
    for k, v := range scores_to_level {
       if g.score > k && v > g.level {
          g.setLevel(v)
@@ -79,9 +85,13 @@ func (g *Game) addScore(load int) {
 }
 
 func (g *Game) setLevel(level int) {
+   if g.level > 10 {
+      fmt.Printf("Level 10 is max!\n")
+      return
+   }
    g.level = level
-   g.speed = GAME_INITIAL_SPEED - SPEED_STEP * int64(g.level - 1)
-   //fmt.Printf("Level updated to %v, speed is %v\n", g.level, g.speed)
+   g.speed = GAME_INITIAL_SPEED - LEVEL_STEP * int64(g.level - 1)
+   fmt.Printf("Level updated to %v, speed is %v\n", g.level, g.speed)
 }
 
 func (g *Game) resetScore() {
@@ -125,8 +135,12 @@ func (g* Game) update_tick() {
    g.last_tick = time.Now().UnixNano()
 }
 
-func (g *Game) update_input_tick() {
-   g.last_input_tick = time.Now().UnixNano()
+func (g *Game) update_rotation_tick() {
+   g.last_rotation_tick = time.Now().UnixNano()
+}
+
+func (g *Game) update_move_tick() {
+   g.last_move_tick = time.Now().UnixNano()
 }
 
 func (g *Game) piece_to_heap() {
@@ -251,9 +265,18 @@ func (g *Game) collision_right(p *Piece) bool {
    return false
 }
 
-func (g *Game) should_handle_input() bool {
+func (g *Game) should_move() bool {
    cur_tick := time.Now().UnixNano()
-   if cur_tick < (g.last_input_tick + INPUT_SPEED) {
+   if cur_tick < (g.last_move_tick + MOVE_STEP) {
+      return false
+   } else {
+      return true
+   }
+}
+
+func (g *Game) should_rotate() bool {
+   cur_tick := time.Now().UnixNano()
+   if cur_tick < (g.last_rotation_tick + ROTATION_STEP) {
       return false
    } else {
       return true
@@ -261,17 +284,20 @@ func (g *Game) should_handle_input() bool {
 }
 
 func (g *Game) handle_input() {
-   if input_left() && !g.collision_left(g.cur_piece) {
+   if g.should_move() && input_left() && !g.collision_left(g.cur_piece) {
       g.cur_piece.move_left()
+      g.update_move_tick()
    }
-   if input_right() && !g.collision_right(g.cur_piece) {
+   if g.should_move() && input_right() && !g.collision_right(g.cur_piece) {
       g.cur_piece.move_right()
+      g.update_move_tick()
    }
    if input_down() && !g.collision_bottom(g.cur_piece) {
       g.cur_piece.fall()
    }
-   if input_space() {
+   if g.should_rotate() && input_space() {
       g.rotate_piece_if_possible()
+      g.update_rotation_tick()
    }
 }
 
@@ -295,10 +321,7 @@ func (g *Game) collides(p *Piece) bool {
 }
 
 func (g* Game) update() {
-   if g.should_handle_input() {
-      g.handle_input()
-      g.update_input_tick()
-   }
+   g.handle_input()
    if g.should_update_state() {
       //fmt.Printf("Updating game now! %v\n", g.last_tick)
 
@@ -308,6 +331,7 @@ func (g* Game) update() {
          g.clean_heap()
          g.cur_piece = g.next_piece
          if g.collides(g.cur_piece) {
+            fmt.Printf("Game Over\n")
             g.game_over = true
          }
          g.next_piece = g.pick_piece()
