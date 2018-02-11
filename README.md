@@ -1,7 +1,7 @@
 # GoTetris
 GoTetris is simple Tetris game written in Go for fun and profit.
 
-![alt text](https://raw.githubusercontent.com/jphalimi/GoTetris/master/resources/screenshot.png)
+<img src="https://raw.githubusercontent.com/jphalimi/GoTetris/master/resources/screenshot_splash.png" alt="Splash screen" width="250" height="250" /> <img src="https://raw.githubusercontent.com/jphalimi/GoTetris/master/resources/screenshot.png" alt="Splash screen" width="250" height="250" />
 
 # Setup
 ```
