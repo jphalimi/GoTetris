@@ -26,7 +26,7 @@ type Game struct {
    last_tick int64
    last_move_tick, last_rotation_tick int64
    picked_new_piece bool
-   game_over bool
+   game_started, game_over bool
 }
 
 func (g *Game) print() {
@@ -44,6 +44,7 @@ func (g *Game) init() {
    g.cur_piece = g.pick_piece()
    g.next_piece = g.pick_piece()
    g.game_over = false
+   g.game_started = false
 
    // Init grid.
    for i := 0; i < GRID_X; i++ {
@@ -51,6 +52,14 @@ func (g *Game) init() {
          g.grid[i][j] = -1
       }
    }
+}
+
+func (g *Game) is_started() bool {
+   return g.game_started
+}
+
+func (g *Game) start_game() {
+   g.game_started = true
 }
 
 func (g *Game) getScore() int {

@@ -12,6 +12,7 @@ import (
   	"io/ioutil"
    "strconv"
    "image"
+   "time"
 )
 
 const (
@@ -56,7 +57,7 @@ type Square struct {
 }
 
 type Graphics struct {
-   block, background, next_piece, level, score *ebiten.Image
+   block, background, splash, next_piece, level, score *ebiten.Image
    block_size CoordInt
    leftpanel, righttoppanel, rightbottompanel *Square
    game_offset CoordF64
@@ -64,6 +65,7 @@ type Graphics struct {
    next_blocks [4][4] Block
    ginit bool
    font font.Face
+   last_splash_tick int64
 }
 
 func (g *Graphics) is_init() bool {
@@ -91,6 +93,7 @@ func (g *Graphics) init(screen *ebiten.Image) {
    g.next_piece = new_image("next_piece.png")
    g.level = new_image("level.png")
    g.score = new_image("score.png")
+   g.splash = new_image("splash.png")
    g.allocate_game_blocks(w, h)
    g.allocate_next_blocks(w, h)
    g.init_font()
@@ -273,7 +276,7 @@ func (g *Graphics) drawNextPiece(game *Game, screen *ebiten.Image) {
    }
 }
 
-func (g *Graphics) draw2(game *Game, screen *ebiten.Image) {
+func (g *Graphics) draw_blocks(game *Game, screen *ebiten.Image) {
    op := &ebiten.DrawImageOptions{}
 	for i := 0; i < GRID_X; i++ {
 		for j := 0; j < GRID_Y; j++ {
@@ -289,9 +292,29 @@ func (g *Graphics) draw2(game *Game, screen *ebiten.Image) {
             block_offset + int(g.block_size.y),
             int(g.block_size.x))
 			op.SourceRect = &src
-         //fmt.Printf("Drawing piece %v;%v, BS{%v,%v}\n", g.game_blocks[i][j].pos.x, g.game_blocks[i][j].pos.y, g.block_size.y, g.block_size.x)
 			screen.DrawImage(g.block, op)
 		}
+   }
+}
+
+func (g *Graphics) should_draw_starter() bool {
+   cur_tick := time.Now().UnixNano() / (1e9) // 1s
+   if cur_tick % 2 == 0 {
+      return false
+   } else {
+      return true
+   }
+}
+
+func (g *Graphics) drawSplash(game *Game, screen *ebiten.Image) {
+   op := &ebiten.DrawImageOptions{}
+   screen.DrawImage(g.splash, op)
+   if input_space() {
+      game.start_game()
+   }
+   if g.should_draw_starter() {
+      text.Draw(screen, "Press Space when ready", g.font, 
+         80, 440, color.White);
    }
 }
 
@@ -305,14 +328,8 @@ func (g *Graphics) draw(game *Game, screen *ebiten.Image) {
    g.drawPanels(screen)
    g.alter_colors(game)
 
-   g.draw2(game, screen)
+   g.draw_blocks(game, screen)
 
-   // Draw blocks.
-   //for i := 0; i < GRID_X; i++ {
-   //   for j := 0; j < GRID_Y; j++ {
-   //      g.game_blocks[i][j].draw(screen)
-   //   }
-   //}
    g.drawScoreAndLevel(game, screen)
    g.drawNextPiece(game, screen)
 }

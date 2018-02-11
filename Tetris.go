@@ -21,14 +21,19 @@ func update(screen *ebiten.Image) error {
       graphics.init(screen)
    }
 
-   up_s := time.Now().UnixNano()
-   g.update()
-   up_t := time.Now().UnixNano() - up_s
-   dr_s := time.Now().UnixNano()
-   graphics.draw(&g, screen)
-   dr_t := time.Now().UnixNano() - dr_s
-   msg := fmt.Sprintf(`FPS: %0.2f, up = %v, dr = %v`, ebiten.CurrentFPS(), up_t, dr_t)
-   ebitenutil.DebugPrint(screen, msg)
+   if g.is_started() {
+      up_s := time.Now().UnixNano()
+      g.update()
+      up_t := time.Now().UnixNano() - up_s
+      dr_s := time.Now().UnixNano()
+      graphics.draw(&g, screen)
+      dr_t := time.Now().UnixNano() - dr_s
+      msg := fmt.Sprintf(`FPS: %0.2f, up = %v, dr = %v`, ebiten.CurrentFPS(), up_t, dr_t)
+      ebitenutil.DebugPrint(screen, msg)
+   } else {
+      // Display splash.
+      graphics.drawSplash(&g, screen)
+   }
    return nil
 }
 
