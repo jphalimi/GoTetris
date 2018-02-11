@@ -10,9 +10,9 @@ const (
    GRID_X = 20
    GRID_Y = 10
    GAME_INITIAL_SPEED = 5e8
-   MOVE_STEP = 8e7
+   MOVE_STEP = 1.2e8
    LEVEL_STEP = 5e7
-   ROTATION_STEP = 1e8
+   ROTATION_STEP = 2e8
    INPUT_SPEED = 0
 )
 
@@ -340,7 +340,7 @@ func (g* Game) update() {
          g.clean_heap()
          g.cur_piece = g.next_piece
          if g.collides(g.cur_piece) {
-            fmt.Printf("Game Over\n")
+            fmt.Printf("Game Over: Score is %v\n", g.getScore())
             g.game_over = true
          }
          g.next_piece = g.pick_piece()
