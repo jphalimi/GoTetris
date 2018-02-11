@@ -7,6 +7,7 @@ import (
 	"github.com/golang/freetype/truetype"
    "golang.org/x/image/font"
    "image/color"
+   _ "image/png"
    "fmt"
    "path"
   	"io/ioutil"
