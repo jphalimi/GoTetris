@@ -13,7 +13,14 @@ const (
    MOVE_STEP = 1.2e8
    LEVEL_STEP = 5e7
    ROTATION_STEP = 2e8
-   INPUT_SPEED = 0
+   PAUSE_STEP = 5e8
+)
+
+const (
+   GAME_SPLASH = 0
+   GAME_STARTED = 1
+   GAME_PAUSED = 2
+   GAME_OVER = 3
 )
 
 type Game struct {
@@ -24,9 +31,9 @@ type Game struct {
    speed int64
    level int
    last_tick int64
-   last_move_tick, last_rotation_tick int64
+   last_move_tick, last_rotation_tick, last_pause_tick int64
    picked_new_piece bool
-   game_started, game_over bool
+   game_state int8
 }
 
 func (g *Game) print() {
@@ -43,8 +50,7 @@ func (g *Game) init() {
    g.last_rotation_tick = 0
    g.cur_piece = g.pick_piece()
    g.next_piece = g.pick_piece()
-   g.game_over = false
-   g.game_started = false
+   g.game_state = GAME_SPLASH
 
    // Init grid.
    for i := 0; i < GRID_X; i++ {
@@ -55,11 +61,11 @@ func (g *Game) init() {
 }
 
 func (g *Game) is_started() bool {
-   return g.game_started
+   return g.game_state != GAME_SPLASH
 }
 
 func (g *Game) start_game() {
-   g.game_started = true
+   g.game_state = GAME_STARTED
 }
 
 func (g *Game) getScore() int {
@@ -150,6 +156,10 @@ func (g *Game) update_rotation_tick() {
 
 func (g *Game) update_move_tick() {
    g.last_move_tick = time.Now().UnixNano()
+}
+
+func (g *Game) update_pause_tick() {
+   g.last_pause_tick = time.Now().UnixNano()
 }
 
 func (g *Game) piece_to_heap() {
@@ -292,7 +302,16 @@ func (g *Game) should_rotate() bool {
    }
 }
 
-func (g *Game) handle_input() {
+func (g *Game) should_pause() bool {
+   cur_tick := time.Now().UnixNano()
+   if cur_tick < (g.last_pause_tick + PAUSE_STEP) {
+      return false
+   } else {
+      return true
+   }
+}
+
+func (g *Game) handle_input_play() {
    if g.should_move() && input_left() && !g.collision_left(g.cur_piece) {
       g.cur_piece.move_left()
       g.update_move_tick()
@@ -307,6 +326,23 @@ func (g *Game) handle_input() {
    if g.should_rotate() && input_space() {
       g.rotate_piece_if_possible()
       g.update_rotation_tick()
+   }
+   if g.should_pause() && input_enter() {
+      g.game_state = GAME_PAUSED
+      g.update_pause_tick()
+   }
+}
+
+func (g *Game) handle_input_pause() {
+   if g.should_pause() && input_enter() {
+      g.game_state = GAME_STARTED
+      g.update_pause_tick()
+   }
+}
+
+func (g *Game) handle_input_over() {
+   if input_space() {
+      g.init()
    }
 }
 
@@ -329,8 +365,16 @@ func (g *Game) collides(p *Piece) bool {
           g.collision_bottom(p)
 }
 
-func (g* Game) update() {
-   g.handle_input()
+func (g *Game) update() {
+   switch g.game_state {
+      case GAME_STARTED: g.update_play()
+      case GAME_PAUSED: g.update_pause()
+      case GAME_OVER: g.update_over()
+   }
+}
+
+func (g* Game) update_play() {
+   g.handle_input_play()
    if g.should_update_state() {
       //fmt.Printf("Updating game now! %v\n", g.last_tick)
 
@@ -341,7 +385,7 @@ func (g* Game) update() {
          g.cur_piece = g.next_piece
          if g.collides(g.cur_piece) {
             fmt.Printf("Game Over: Score is %v\n", g.getScore())
-            g.game_over = true
+            g.game_state = GAME_OVER
          }
          g.next_piece = g.pick_piece()
       } else {
@@ -350,4 +394,12 @@ func (g* Game) update() {
 
       g.update_tick()
    }
+}
+
+func (g *Game) update_pause() {
+   g.handle_input_pause()
+}
+
+func (g *Game) update_over() {
+   g.handle_input_over()
 }
