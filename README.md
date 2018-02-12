@@ -8,6 +8,7 @@ There are no binary releases available at this time. Please follow the guide bel
 # Prerequisites
 1. Have Go installed on your machine. Go the <a href="https://golang.org/doc/install">official website</a> if you don't yet.
 2. You will need to set the GOPATH environment variable setup appropriately as well.
+3. For Linux users: Install `xorg-dev` and `freeglut3-dev` packages.
 
 # Setup & build
 First, you will need to download the game dependencies. Please run the following command in your local project folder:
