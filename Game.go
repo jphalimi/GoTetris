@@ -10,10 +10,7 @@ const (
    GRID_X = 20
    GRID_Y = 10
    GAME_INITIAL_SPEED = 5e8
-   MOVE_STEP = 1.2e8
    LEVEL_STEP = 5e7
-   ROTATION_STEP = 2e8
-   PAUSE_STEP = 5e8
 )
 
 const (
@@ -31,7 +28,6 @@ type Game struct {
    speed int64
    level int
    last_tick int64
-   last_move_tick, last_rotation_tick, last_pause_tick int64
    picked_new_piece bool
    game_state int8
 }
@@ -46,8 +42,6 @@ func (g *Game) init() {
    g.level = 1
    g.speed = GAME_INITIAL_SPEED // In Nano-seconds.
    g.last_tick = time.Now().UnixNano()
-   g.last_move_tick = 0
-   g.last_rotation_tick = 0
    g.cur_piece = g.pick_piece()
    g.next_piece = g.pick_piece()
    g.game_state = GAME_SPLASH
@@ -113,10 +107,6 @@ func (g *Game) resetScore() {
    g.score = 0
 }
 
-func (g *Game) end() bool {
-   return false
-}
-
 func (g *Game) pick_piece() *Piece {
    new_piece := &Piece{}
    new_piece.init()
@@ -148,18 +138,6 @@ func (g* Game) should_update_state() bool {
 
 func (g* Game) update_tick() {
    g.last_tick = time.Now().UnixNano()
-}
-
-func (g *Game) update_rotation_tick() {
-   g.last_rotation_tick = time.Now().UnixNano()
-}
-
-func (g *Game) update_move_tick() {
-   g.last_move_tick = time.Now().UnixNano()
-}
-
-func (g *Game) update_pause_tick() {
-   g.last_pause_tick = time.Now().UnixNano()
 }
 
 func (g *Game) piece_to_heap() {
@@ -284,59 +262,27 @@ func (g *Game) collision_right(p *Piece) bool {
    return false
 }
 
-func (g *Game) should_move() bool {
-   cur_tick := time.Now().UnixNano()
-   if cur_tick < (g.last_move_tick + MOVE_STEP) {
-      return false
-   } else {
-      return true
-   }
-}
-
-func (g *Game) should_rotate() bool {
-   cur_tick := time.Now().UnixNano()
-   if cur_tick < (g.last_rotation_tick + ROTATION_STEP) {
-      return false
-   } else {
-      return true
-   }
-}
-
-func (g *Game) should_pause() bool {
-   cur_tick := time.Now().UnixNano()
-   if cur_tick < (g.last_pause_tick + PAUSE_STEP) {
-      return false
-   } else {
-      return true
-   }
-}
-
 func (g *Game) handle_input_play() {
-   if g.should_move() && input_left() && !g.collision_left(g.cur_piece) {
+   if input_left() && !g.collision_left(g.cur_piece) {
       g.cur_piece.move_left()
-      g.update_move_tick()
    }
-   if g.should_move() && input_right() && !g.collision_right(g.cur_piece) {
+   if input_right() && !g.collision_right(g.cur_piece) {
       g.cur_piece.move_right()
-      g.update_move_tick()
    }
    if input_down() && !g.collision_bottom(g.cur_piece) {
       g.cur_piece.fall()
    }
-   if g.should_rotate() && input_space() {
+   if input_space() {
       g.rotate_piece_if_possible()
-      g.update_rotation_tick()
    }
-   if g.should_pause() && input_enter() {
+   if input_enter() {
       g.game_state = GAME_PAUSED
-      g.update_pause_tick()
    }
 }
 
 func (g *Game) handle_input_pause() {
-   if g.should_pause() && input_enter() {
+   if input_enter() {
       g.game_state = GAME_STARTED
-      g.update_pause_tick()
    }
 }
 

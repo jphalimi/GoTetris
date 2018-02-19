@@ -58,7 +58,8 @@ type Square struct {
 }
 
 type Graphics struct {
-   block, background, splash, next_piece, level, score *ebiten.Image
+   block, background, splash, next_piece,
+   level, score, pause *ebiten.Image
    block_size CoordInt
    leftpanel, righttoppanel, rightbottompanel *Square
    game_offset CoordF64
@@ -95,6 +96,7 @@ func (g *Graphics) init(screen *ebiten.Image) {
    g.level = new_image("level.png")
    g.score = new_image("score.png")
    g.splash = new_image("splash.png")
+   g.pause = new_image("pause.png")
    g.allocate_game_blocks(w, h)
    g.allocate_next_blocks(w, h)
    g.init_font()
@@ -203,12 +205,15 @@ func (g *Graphics) drawScoreAndLevel(game *Game, screen *ebiten.Image) {
    op.GeoM.Translate(offset.y, offset.x)
    screen.DrawImage(g.score, op)
    text.Draw(screen, strconv.Itoa(game.getScore()), g.font, 
-      int(offset.y) + 10, int(offset.x) + 80, color.White);
+      int(offset.y) + 10, int(offset.x) + 80, color.White)
    op = &ebiten.DrawImageOptions{}
    op.GeoM.Translate(offset.y, offset.x + 100)
    screen.DrawImage(g.level, op)
    text.Draw(screen, strconv.Itoa(game.getLevel()), g.font, 
-      int(offset.y) + 10, int(offset.x) + 175, color.White);
+      int(offset.y) + 10, int(offset.x) + 175, color.White)
+   op = &ebiten.DrawImageOptions{}
+   op.GeoM.Translate(offset.y + 95, offset.x + 195)
+   screen.DrawImage(g.pause, op)
 }
 
 func (g *Graphics) GetOffset(b *Block) int {
