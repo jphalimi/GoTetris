@@ -11,11 +11,6 @@ There are no binary releases available at this time. Please follow the guide bel
 3. For Linux users: Install `xorg-dev` and `freeglut3-dev` packages.
 
 # Setup & build
-First, you will need to download the game dependencies. Please run the following command in your local project folder:
-```
-go get
-```
-Now, you can build the game:
 ```
 go build
 ```

@@ -90,13 +90,13 @@ func new_image(filename string) *ebiten.Image {
 func (g *Graphics) init(screen *ebiten.Image) {
    w, h := screen.Size()
    g.init_panels(w, h)
-   g.block = new_image("blocks.png")
-   g.background = new_image("background.png")
-   g.next_piece = new_image("next_piece.png")
-   g.level = new_image("level.png")
-   g.score = new_image("score.png")
-   g.splash = new_image("splash.png")
-   g.pause = new_image("pause.png")
+   g.block = new_image("resources/blocks.png")
+   g.background = new_image("resources/background.png")
+   g.next_piece = new_image("resources/next_piece.png")
+   g.level = new_image("resources/level.png")
+   g.score = new_image("resources/score.png")
+   g.splash = new_image("resources/splash.png")
+   g.pause = new_image("resources/pause.png")
    g.allocate_game_blocks(w, h)
    g.allocate_next_blocks(w, h)
    g.init_font()
@@ -175,7 +175,7 @@ func (g *Graphics) allocate_next_blocks(width, height int) {
 
 func (g *Graphics) init_font() {
    // Font allocation
-   f, err := ebitenutil.OpenFile(path.Join(GetCurrentDir(), "superstar-m54.ttf"))
+   f, err := ebitenutil.OpenFile(path.Join(GetCurrentDir(), "resources/superstar-m54.ttf"))
 	if err != nil {
 		panic(err)
 	}
