@@ -26,7 +26,6 @@ func (p *Piece) init() {
    p.grid_pos = CoordInt{0,3}
    p.direction = STRAIGHT
    p.color = int8(rand.Intn(7))
-   fmt.Printf("Color: %d", p.color)
 }
 
 func (p *Piece) init_square() {
