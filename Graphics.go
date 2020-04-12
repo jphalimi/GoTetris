@@ -90,13 +90,13 @@ func new_image(filename string) *ebiten.Image {
 func (g *Graphics) init(screen *ebiten.Image) {
    w, h := screen.Size()
    g.init_panels(w, h)
-   g.block = new_image("resources/blocks.png")
-   g.background = new_image("resources/background.png")
-   g.next_piece = new_image("resources/next_piece.png")
-   g.level = new_image("resources/level.png")
-   g.score = new_image("resources/score.png")
-   g.splash = new_image("resources/splash.png")
-   g.pause = new_image("resources/pause.png")
+   g.block = new_image("blocks.png")
+   g.background = new_image("background.png")
+   g.next_piece = new_image("next_piece.png")
+   g.level = new_image("level.png")
+   g.score = new_image("score.png")
+   g.splash = new_image("splash.png")
+   g.pause = new_image("pause.png")
    g.allocate_game_blocks(w, h)
    g.allocate_next_blocks(w, h)
    g.init_font()
@@ -175,7 +175,7 @@ func (g *Graphics) allocate_next_blocks(width, height int) {
 
 func (g *Graphics) init_font() {
    // Font allocation
-   f, err := ebitenutil.OpenFile(path.Join(GetCurrentDir(), "resources/superstar-m54.ttf"))
+   f, err := ebitenutil.OpenFile(path.Join(GetCurrentDir(), "superstar-m54.ttf"))
 	if err != nil {
 		panic(err)
 	}
@@ -264,9 +264,9 @@ func (g *Graphics) drawNextPiece(game *Game, screen *ebiten.Image) {
    		src := image.Rect(block_offset, 0,
             block_offset + int(g.block_size.y),
             int(g.block_size.x))
-   		op.SourceRect = &src
-         //fmt.Printf("Drawing piece %v;%v, SR{%v,%v,%v,%v}\n", g.game_blocks[i][j].size.x, g.game_blocks[i][j].size.y)
-   		screen.DrawImage(g.block, op)
+         sub_image := g.block.SubImage(src).(*ebiten.Image)
+         //fmt.Printf("Drawing piece (color %d) %v;%v, SR{%v,%v,%v,%v}\n", g.game_blocks[i][j].color,  g.game_blocks[i][j].pos.x, g.game_blocks[i][j].pos.y)
+   		screen.DrawImage(sub_image, op)
    	}
    }
 
@@ -276,7 +276,7 @@ func (g *Graphics) drawNextPiece(game *Game, screen *ebiten.Image) {
          if game.next_piece.grid[i][j] {
             g.next_blocks[i][j].setColor(game.next_piece.color)
          } else {
-            g.next_blocks[i][j].resetColors()
+            g.next_blocks[i][j].resetColor()
          }
       }
    }
@@ -294,11 +294,10 @@ func (g *Graphics) draw_blocks(game *Game, screen *ebiten.Image) {
             g.game_blocks[i][j].pos.y,
             g.game_blocks[i][j].pos.x)
          block_offset := g.GetOffset(&g.game_blocks[i][j])
-			src := image.Rect(block_offset, 0,
+			sub_image := g.block.SubImage(image.Rect(block_offset, 0,
             block_offset + int(g.block_size.y),
-            int(g.block_size.x))
-			op.SourceRect = &src
-			screen.DrawImage(g.block, op)
+            int(g.block_size.x))).(*ebiten.Image)
+			screen.DrawImage(sub_image, op)
 		}
    }
 }
@@ -347,7 +346,7 @@ func (g *Graphics) alter_colors(game *Game) {
          if game.grid_set(i,j) {
             g.setColor(i, j, game.grid[i][j])
          } else {
-            g.game_blocks[i][j].resetColors()
+            g.game_blocks[i][j].resetColor()
          }
       }
    }
@@ -375,7 +374,7 @@ func (g *Graphics) setColor(i, j int, c int8) {
    }
 }
 
-func (b *Block) resetColors() {
+func (b *Block) resetColor() {
    b.color = NONE
 }
 
